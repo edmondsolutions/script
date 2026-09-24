@@ -117,7 +117,7 @@ footer{text-align:center; color:var(--muted); font-size:.7rem; margin:20px 0 40p
     <div class="card">
       <h2>Identification client</h2>
       <div class="sub">Client existant ou nouveau contact SAV.</div>
-      <div class="script"><b>Script :</b> "Bonjour, Édmond Solutions, en quoi puis-je vous aider ? Vous êtes bien M./Mme … ? Pouvez-vous me confirmer l'adresse de l'installation ?"</div>
+      <div class="script"><b>Script :</b> "Bonjour, Édmond Solutions, en quoi puis-je vous aider ?"</div>
 
       <div class="field">
         <label>Client *</label>
@@ -127,38 +127,12 @@ footer{text-align:center; color:var(--muted); font-size:.7rem; margin:20px 0 40p
         </div>
       </div>
 
-      <div class="field" id="existingClientBlock">
-        <label>Rechercher le client existant (nom, tél. ou n° affaire Pipedrive) *</label>
-        <input type="text" id="existingClientSearch" placeholder="Ex: DUPONT Jean / 06.. / Affaire #1234">
-        <div class="hint">⚠️ Recherche à faire manuellement dans Pipedrive (cette page ne lit pas votre compte) — collez ici le nom du deal ou son N°.</div>
-      </div>
-
-      <div class="grid2">
-        <div class="field">
-          <label>Civilité</label>
-          <div class="choices" data-group="civilite">
-            <div class="choice sel" data-val="M.">Monsieur</div>
-            <div class="choice" data-val="Mme">Madame</div>
-          </div>
-        </div>
-        <div class="field">
-          <label>N° installation / commande (si connu)</label>
-          <input type="text" id="numCommande" placeholder="Ex: CMD-2026-0456">
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div class="field"><label>Nom *</label><input type="text" id="nom" placeholder="NOM (majuscules)"></div>
-        <div class="field"><label>Prénom *</label><input type="text" id="prenom"></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label>Téléphone *</label><input type="tel" id="tel" placeholder="06 12 34 56 78"></div>
-        <div class="field"><label>Email</label><input type="email" id="email"></div>
-      </div>
       <div class="field">
-        <label>Adresse de l'installation *</label>
-        <input type="text" id="adresse" placeholder="N°, rue, code postal, ville">
+        <label>N° de l'affaire Pipedrive *</label>
+        <input type="text" id="numAffaire" placeholder="Ex: 1234">
+        <div class="hint">Le numéro du deal dans Pipedrive : les coordonnées du client sont récupérées depuis l'affaire.</div>
       </div>
+
       <div class="field">
         <label>Date d'installation initiale (si connue)</label>
         <input type="date" id="dateInstall">
@@ -365,7 +339,7 @@ QUALIFICATION SAV
 
 <script>
 const state = {
-  client_type:"Client existant", civilite:"M.", type_install:"Solaire Photovoltaïque",
+  client_type:"Client existant", type_install:"Solaire Photovoltaïque",
   type_panne:"Panne totale", garantie:"Oui", urgence:"Critique (<24h - sécurité)",
   intervention:"Oui - sur site", devis:"Non - couvert garantie", docs:[]
 };
@@ -439,12 +413,7 @@ function buildSummary(){
 ``,
 `CLIENT`,
 `- Statut : ${state.client_type}`,
-state.client_type==='Client existant' ? `- Réf. client/deal existant : ${v('existingClientSearch')||'—'}` : ``,
-`- Nom : ${state.civilite} ${v('nom')} ${v('prenom')}`,
-`- Téléphone : ${v('tel')}`,
-`- Email : ${v('email')||'—'}`,
-`- Adresse installation : ${v('adresse')}`,
-`- N° commande/installation : ${v('numCommande')||'—'}`,
+`- N° affaire Pipedrive : ${v('numAffaire')||'—'}`,
 `- Date installation initiale : ${v('dateInstall')||'—'}`,
 ``,
 `PRODUIT / PANNE`,
@@ -477,7 +446,7 @@ document.getElementById('copyBtn').addEventListener('click',()=>{
 });
 document.getElementById('mailBtn').addEventListener('click',()=>{
   const text = document.getElementById('summary').textContent;
-  const subject = encodeURIComponent('Ticket SAV - '+ (v('nom')||'Nouveau client'));
+  const subject = encodeURIComponent('Ticket SAV - '+ (v('numAffaire') ? 'Affaire '+v('numAffaire') : 'Nouveau client'));
   const body = encodeURIComponent(text);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 });
@@ -490,14 +459,7 @@ function buildPayload(){
     date_ticket: new Date().toISOString(),
     urgence_badge: urgenceBadge().replace(/[\[\]]/g,''),
     client_type: state.client_type,
-    ref_client_existant: state.client_type==='Client existant' ? v('existingClientSearch') : '',
-    civilite: state.civilite,
-    nom: v('nom'),
-    prenom: v('prenom'),
-    telephone: v('tel'),
-    email: v('email'),
-    adresse_installation: v('adresse'),
-    num_commande: v('numCommande'),
+    num_affaire_pipedrive: v('numAffaire'),
     date_installation: v('dateInstall'),
     type_installation: state.type_install,
     fabricant: fab,
@@ -519,7 +481,7 @@ function buildPayload(){
 const webhookBtn = document.getElementById('webhookBtn');
 webhookBtn.addEventListener('click', async ()=>{
   buildSummary();
-  const required = {nom:'Nom', prenom:'Prénom', tel:'Téléphone', adresse:"Adresse de l'installation", description:'Description du problème'};
+  const required = {numAffaire:'N° affaire Pipedrive', description:'Description du problème'};
   const missing = Object.keys(required).filter(id=>!v(id)).map(id=>required[id]);
   if(missing.length){ showToast('Champs manquants : '+missing.join(', ')); return; }
 
