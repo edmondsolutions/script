@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qualification SAV - Édmond Solutions</title>
+<style>
+:root{
+  --blue:#5f89a7; --blue-light:#bac5d6; --green:#8cbf43;
+  --bg:#f4f6f8; --card:#ffffff; --text:#1e2a33; --muted:#5c6b76;
+  --border:#e1e6ea; --danger:#d9534f; --warn:#e0a13a; --ok:#8cbf43;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12181c; --card:#1b242b; --text:#eef2f4; --muted:#9fb0ba; --border:#2c383f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12181c; --card:#1b242b; --text:#eef2f4; --muted:#9fb0ba; --border:#2c383f;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:'Montserrat',Arial,sans-serif; background:var(--bg); color:var(--text);
+  padding:16px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto}
+header{
+  background:linear-gradient(135deg,var(--blue),#4a7a97); color:#fff; border-radius:14px;
+  padding:20px 22px; margin-bottom:16px;
+}
+header h1{margin:0 0 4px 0; font-size:1.3rem}
+header p{margin:0; opacity:.9; font-size:.85rem}
+.tabs{display:flex; gap:6px; overflow-x:auto; margin-bottom:16px; padding-bottom:2px}
+.tab{
+  flex:0 0 auto; padding:8px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border);
+  font-size:.78rem; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; transition:.15s;
+}
+.tab.active{background:var(--blue); color:#fff; border-color:var(--blue)}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:14px;
+}
+.card h2{margin:0 0 4px 0; font-size:1.05rem}
+.card .sub{color:var(--muted); font-size:.82rem; margin-bottom:14px}
+.field{margin-bottom:14px}
+.field label{display:block; font-size:.8rem; font-weight:600; margin-bottom:6px}
+.field .hint{font-size:.72rem; color:var(--muted); margin-top:4px}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],textarea,select{
+  width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg);
+  color:var(--text); font-family:inherit; font-size:.88rem;
+}
+textarea{min-height:70px; resize:vertical}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+.choices{display:flex; flex-wrap:wrap; gap:8px}
+.choice{
+  padding:9px 14px; border-radius:9px; border:1.5px solid var(--border); background:var(--bg);
+  font-size:.82rem; font-weight:600; cursor:pointer; color:var(--text); user-select:none; transition:.12s;
+}
+.choice.sel{border-color:var(--blue); background:var(--blue); color:#fff}
+.choice.urgent-critique.sel{background:var(--danger); border-color:var(--danger)}
+.choice.urgent-urgent.sel{background:var(--warn); border-color:var(--warn)}
+.choice.urgent-normal.sel{background:var(--blue); border-color:var(--blue)}
+.choice.urgent-faible.sel{background:var(--ok); border-color:var(--ok)}
+.script{
+  background:var(--blue-light); color:#1e2a33; border-radius:10px; padding:10px 14px; font-size:.82rem;
+  font-style:italic; margin-bottom:12px; border-left:4px solid var(--blue);
+}
+.script b{font-style:normal}
+.banner{
+  background:#fdf1e2; border:1px solid var(--warn); color:#7a5416; border-radius:8px; padding:8px 12px;
+  font-size:.76rem; margin-bottom:12px;
+}
+:root[data-theme="dark"] .banner, @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .banner{background:#3a2f18;color:#f0d7a3}}
+.row-btns{display:flex; gap:10px; margin-top:18px}
+button{
+  border:none; border-radius:10px; padding:12px 18px; font-weight:700; font-size:.88rem; cursor:pointer;
+  font-family:inherit;
+}
+.btn-primary{background:var(--green); color:#fff; flex:1}
+.btn-secondary{background:transparent; border:1.5px solid var(--border); color:var(--text)}
+.summary-box{
+  background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:14px; font-size:.8rem;
+  white-space:pre-wrap; font-family:'SFMono-Regular',Consolas,monospace; line-height:1.5; max-height:340px; overflow-y:auto;
+}
+.badge{display:inline-block; padding:3px 9px; border-radius:6px; font-size:.68rem; font-weight:700; color:#fff}
+.b-crit{background:var(--danger)} .b-urg{background:var(--warn)} .b-norm{background:var(--blue)} .b-faib{background:var(--ok)}
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg);
+  padding:10px 18px; border-radius:8px; font-size:.82rem; opacity:0; pointer-events:none; transition:.25s;
+}
+.toast.show{opacity:1}
+.req{color:var(--danger)}
+.progress{height:5px; background:var(--border); border-radius:3px; margin-bottom:16px; overflow:hidden}
+.progress-bar{height:100%; background:var(--green); width:20%; transition:.25s}
+footer{text-align:center; color:var(--muted); font-size:.7rem; margin:20px 0 40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🛠️ Qualification SAV</h1>
+    <p>Ouverture ticket SAV — Édmond Solutions</p>
+  </header>
+
+  <div class="progress"><div class="progress-bar" id="progressBar" style="width: 100%;"></div></div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab" data-phase="0">👤 CLIENT</div>
+    <div class="tab" data-phase="1">⚡ PRODUIT / PANNE</div>
+    <div class="tab" data-phase="2">🚦 QUALIFICATION</div>
+    <div class="tab active" data-phase="3">✅ TICKET</div>
+  </div>
+
+  <!-- PHASE 0 : CLIENT -->
+  <section class="phase" data-phase="0">
+    <div class="card">
+      <h2>Identification client</h2>
+      <div class="sub">Client existant ou nouveau contact SAV.</div>
+      <div class="script"><b>Script :</b> "Bonjour, Édmond Solutions, en quoi puis-je vous aider ? Vous êtes bien M./Mme … ? Pouvez-vous me confirmer l'adresse de l'installation ?"</div>
+
+      <div class="field">
+        <label>Client *</label>
+        <div class="choices" data-group="client_type">
+          <div class="choice sel" data-val="Client existant">Client existant</div>
+          <div class="choice" data-val="Nouveau contact">Nouveau contact</div>
+        </div>
+      </div>
+
+      <div class="field" id="existingClientBlock">
+        <label>Rechercher le client existant (nom, tél. ou n° affaire Pipedrive) *</label>
+        <input type="text" id="existingClientSearch" placeholder="Ex: DUPONT Jean / 06.. / Affaire #1234">
+        <div class="hint">⚠️ Recherche à faire manuellement dans Pipedrive (cette page ne lit pas votre compte) — collez ici le nom du deal ou son N°.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Civilité</label>
+          <div class="choices" data-group="civilite">
+            <div class="choice sel" data-val="M.">Monsieur</div>
+            <div class="choice" data-val="Mme">Madame</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>N° installation / commande (si connu)</label>
+          <input type="text" id="numCommande" placeholder="Ex: CMD-2026-0456">
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field"><label>Nom *</label><input type="text" id="nom" placeholder="NOM (majuscules)"></div>
+        <div class="field"><label>Prénom *</label><input type="text" id="prenom"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Téléphone *</label><input type="tel" id="tel" placeholder="06 12 34 56 78"></div>
+        <div class="field"><label>Email</label><input type="email" id="email"></div>
+      </div>
+      <div class="field">
+        <label>Adresse de l'installation *</label>
+        <input type="text" id="adresse" placeholder="N°, rue, code postal, ville">
+      </div>
+      <div class="field">
+        <label>Date d'installation initiale (si connue)</label>
+        <input type="date" id="dateInstall">
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 1 : PRODUIT / PANNE -->
+  <section class="phase" data-phase="1" style="display:none">
+    <div class="card">
+      <h2>Produit concerné</h2>
+      <div class="script"><b>Script :</b> "Quel équipement pose problème : votre installation solaire, votre borne de recharge, ou autre chose ?"</div>
+      <div class="field">
+        <label>Type d'installation *</label>
+        <div class="choices" data-group="type_install">
+          <div class="choice sel" data-val="Solaire Photovoltaïque">☀️ Solaire Photovoltaïque</div>
+          <div class="choice" data-val="Borne de recharge IRVE">🔌 Borne de recharge IRVE</div>
+          <div class="choice" data-val="Autre">Autre</div>
+        </div>
+      </div>
+
+      <div class="field" id="fabricantBlock">
+        <label>Fabricant / marque de l'équipement</label>
+        <select id="fabricant">
+          <option value="">-- Sélectionner --</option>
+          <optgroup label="Onduleurs / PV">
+            <option>SolarEdge</option><option>Huawei</option><option>Enphase</option>
+            <option>Fronius</option><option>Growatt</option>
+          </optgroup>
+          <optgroup label="Bornes IRVE">
+            <option>V2C</option><option>Wallbox</option><option>Zaptec</option>
+            <option>Schneider</option><option>Autre borne</option>
+          </optgroup>
+          <option>Ne sait pas</option>
+          <option>Autre (préciser)</option>
+        </select>
+        <input type="text" id="fabricantAutre" placeholder="Préciser le fabricant" style="margin-top:8px;display:none">
+      </div>
+
+      <div class="field">
+        <label>Type de panne / demande *</label>
+        <div class="choices" data-group="type_panne">
+          <div class="choice sel" data-val="Panne totale">Panne totale</div>
+          <div class="choice" data-val="Panne partielle">Panne partielle</div>
+          <div class="choice" data-val="Anomalie appli / affichage">Anomalie appli/affichage</div>
+          <div class="choice" data-val="Défaut esthétique">Défaut esthétique</div>
+          <div class="choice" data-val="Maintenance préventive">Maintenance préventive</div>
+          <div class="choice" data-val="Question / conseil">Question / conseil</div>
+          <div class="choice" data-val="Autre">Autre</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Description du problème *</label>
+        <textarea id="description" placeholder="Ce que le client observe : symptômes, depuis quand, messages d'erreur, code défaut..."></textarea>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Sous garantie ?</label>
+          <div class="choices" data-group="garantie">
+            <div class="choice sel" data-val="Oui">Oui</div>
+            <div class="choice" data-val="Non">Non</div>
+            <div class="choice" data-val="Ne sait pas">Ne sait pas</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Type de garantie</label>
+          <select id="typeGarantie">
+            <option value="">-- N/A --</option>
+            <option>Fabricant</option>
+            <option>Édmond Solutions</option>
+            <option>Décennale</option>
+            <option>Hors garantie</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 2 : QUALIFICATION -->
+  <section class="phase" data-phase="2" style="display:none">
+    <div class="card">
+      <h2>Qualification SAV</h2>
+      <div class="script"><b>Script :</b> "Est-ce que ça met en sécurité l'installation ou vous prive totalement d'électricité/charge ? À quel moment seriez-vous disponible pour une intervention ?"</div>
+
+      <div class="field">
+        <label>Degré d'urgence *</label>
+        <div class="choices" data-group="urgence">
+          <div class="choice urgent-critique sel" data-val="Critique (&lt;24h - sécurité)">🔴 Critique (&lt;24h, sécurité)</div>
+          <div class="choice urgent-urgent" data-val="Urgent (&lt;48h)">🟠 Urgent (&lt;48h)</div>
+          <div class="choice urgent-normal" data-val="Normal (&lt;1 semaine)">🟡 Normal (&lt;1 semaine)</div>
+          <div class="choice urgent-faible" data-val="Faible (planifiable)">🟢 Faible (planifiable)</div>
+        </div>
+      </div>
+
+      <div class="banner" id="securiteBanner" style="display:none">⚠️ Urgence critique : vérifier qu'il n'y a pas de risque électrique immédiat (odeur de brûlé, fumée, disjonction). Orienter vers coupure du disjoncteur dédié si besoin, en attendant l'intervention.</div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Intervention sur site nécessaire ?</label>
+          <div class="choices" data-group="intervention">
+            <div class="choice sel" data-val="Oui - sur site">Oui - sur site</div>
+            <div class="choice" data-val="Télédiagnostic">Télédiagnostic</div>
+            <div class="choice" data-val="Non - infos suffisantes">Non</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Devis nécessaire ?</label>
+          <div class="choices" data-group="devis">
+            <div class="choice sel" data-val="Non - couvert garantie">Non (garantie)</div>
+            <div class="choice" data-val="Oui">Oui</div>
+            <div class="choice" data-val="À déterminer après diagnostic">À déterminer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Technicien / équipe assignée</label>
+          <select id="technicien">
+            <option value="">-- Non assigné --</option>
+            <option>Équipe PV</option>
+            <option>Équipe IRVE</option>
+            <option>Benoît</option>
+            <option>Autre (à spécifier)</option>
+          </select>
+          <input type="text" id="technicienAutre" placeholder="Préciser" style="margin-top:8px;display:none">
+        </div>
+        <div class="field">
+          <label>Date souhaitée d'intervention</label>
+          <input type="date" id="dateSouhaitee">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Documents à demander au client</label>
+        <div class="choices" data-group="docs" data-multi="1">
+          <div class="choice" data-val="Photos équipement">Photos équipement</div>
+          <div class="choice" data-val="Photo écran/appli erreur">Photo écran/appli erreur</div>
+          <div class="choice" data-val="Photo tableau électrique">Photo tableau électrique</div>
+          <div class="choice" data-val="Vidéo du symptôme">Vidéo du symptôme</div>
+          <div class="choice" data-val="Facture/PV réception">Facture/PV réception</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observations complémentaires</label>
+        <textarea id="observations" placeholder="Contraintes d'accès, disponibilités, historique SAV précédent..."></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 3 : TICKET -->
+  <section class="phase" data-phase="3" style="display:none">
+    <div class="card">
+      <h2>📋 Résumé du ticket SAV</h2>
+      <div class="sub">Vérifiez le résumé puis cliquez sur « Envoyer le ticket SAV » : il part directement dans le scénario Make.</div>
+      <div class="summary-box" id="summary">TICKET SAV [CRITIQUE] — 21/09/2026
+====================================
+CLIENT
+- Statut : Client existant
+- Réf. client/deal existant : —
+- Nom : M.  
+- Téléphone : 
+- Email : —
+- Adresse installation : 
+- N° commande/installation : —
+- Date installation initiale : —
+PRODUIT / PANNE
+- Type d'installation : Solaire Photovoltaïque
+- Fabricant : —
+- Type de panne : Panne totale
+- Description : —
+- Sous garantie : Oui
+QUALIFICATION SAV
+- Urgence : Critique (&lt;24h - sécurité)
+- Intervention sur site : Oui - sur site
+- Devis nécessaire : Non - couvert garantie
+- Technicien/équipe assignée : Non assigné
+- Date souhaitée : —
+- Documents demandés : —
+- Observations : —</div>
+      <div class="row-btns">
+        <button class="btn-primary" id="webhookBtn">🚀 Envoyer le ticket SAV</button>
+      </div>
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn-secondary" id="copyBtn">📋 Copier le résumé</button>
+        <button class="btn-secondary" id="mailBtn">✉️ Envoyer par email</button>
+      </div>
+      <div class="banner" style="margin-top:14px">ℹ️ L'envoi transmet toutes les réponses au webhook Make (champs séparés + résumé complet). Le scénario Make se charge ensuite de créer le deal SAV dans Pipedrive.</div>
+    </div>
+  </section>
+
+  <div class="row-btns">
+    <button class="btn-secondary" id="prevBtn" style="display: inline-block;">← Précédent</button>
+    <button class="btn-primary" id="nextBtn">✅ Générer le résumé</button>
+  </div>
+
+  <footer>Édmond Solutions — Formulaire de qualification SAV interne</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = {
+  client_type:"Client existant", civilite:"M.", type_install:"Solaire Photovoltaïque",
+  type_panne:"Panne totale", garantie:"Oui", urgence:"Critique (<24h - sécurité)",
+  intervention:"Oui - sur site", devis:"Non - couvert garantie", docs:[]
+};
+let phase = 0;
+const totalPhases = 4;
+
+document.querySelectorAll('.choices').forEach(group=>{
+  const name = group.dataset.group;
+  const multi = group.dataset.multi === "1";
+  if(multi) state[name] = state[name] || [];
+  group.querySelectorAll('.choice').forEach(ch=>{
+    ch.addEventListener('click',()=>{
+      if(multi){
+        const val = ch.dataset.val;
+        const idx = state[name].indexOf(val);
+        if(idx>-1){state[name].splice(idx,1); ch.classList.remove('sel');}
+        else{state[name].push(val); ch.classList.add('sel');}
+      } else {
+        group.querySelectorAll('.choice').forEach(c=>c.classList.remove('sel'));
+        ch.classList.add('sel');
+        state[name] = ch.dataset.val;
+      }
+      onStateChange(name);
+    });
+  });
+});
+
+function onStateChange(name){
+  if(name === 'urgence'){
+    document.getElementById('securiteBanner').style.display =
+      state.urgence.startsWith('Critique') ? 'block' : 'none';
+  }
+}
+
+document.getElementById('fabricant').addEventListener('change',e=>{
+  document.getElementById('fabricantAutre').style.display = e.target.value==='Autre (préciser)' ? 'block':'none';
+});
+document.getElementById('technicien').addEventListener('change',e=>{
+  document.getElementById('technicienAutre').style.display = e.target.value==='Autre (à spécifier)' ? 'block':'none';
+});
+
+function showPhase(p){
+  document.querySelectorAll('.phase').forEach(s=> s.style.display = (+s.dataset.phase===p) ? 'block':'none');
+  document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', +t.dataset.phase===p));
+  document.getElementById('prevBtn').style.display = p===0 ? 'none':'inline-block';
+  document.getElementById('nextBtn').textContent = p===totalPhases-1 ? '✅ Générer le résumé' : 'Suivant →';
+  document.getElementById('progressBar').style.width = (((p+1)/totalPhases)*100)+'%';
+  if(p===totalPhases-1) buildSummary();
+}
+document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click',()=> {phase=+t.dataset.phase; showPhase(phase);}));
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  if(phase < totalPhases-1){ phase++; showPhase(phase); } else { buildSummary(); }
+});
+document.getElementById('prevBtn').addEventListener('click',()=>{ if(phase>0){phase--; showPhase(phase);} });
+
+function v(id){ const el=document.getElementById(id); return el? el.value.trim() : ''; }
+
+function urgenceBadge(){
+  if(state.urgence.startsWith('Critique')) return '[CRITIQUE]';
+  if(state.urgence.startsWith('Urgent')) return '[URGENT]';
+  if(state.urgence.startsWith('Normal')) return '[NORMAL]';
+  return '[FAIBLE]';
+}
+
+function buildSummary(){
+  const fab = v('fabricant')==='Autre (préciser)' ? v('fabricantAutre') : v('fabricant');
+  const tech = v('technicien')==='Autre (à spécifier)' ? v('technicienAutre') : v('technicien');
+  const lines = [
+`TICKET SAV ${urgenceBadge()} — ${new Date().toLocaleDateString('fr-FR')}`,
+`====================================`,
+``,
+`CLIENT`,
+`- Statut : ${state.client_type}`,
+state.client_type==='Client existant' ? `- Réf. client/deal existant : ${v('existingClientSearch')||'—'}` : ``,
+`- Nom : ${state.civilite} ${v('nom')} ${v('prenom')}`,
+`- Téléphone : ${v('tel')}`,
+`- Email : ${v('email')||'—'}`,
+`- Adresse installation : ${v('adresse')}`,
+`- N° commande/installation : ${v('numCommande')||'—'}`,
+`- Date installation initiale : ${v('dateInstall')||'—'}`,
+``,
+`PRODUIT / PANNE`,
+`- Type d'installation : ${state.type_install}`,
+`- Fabricant : ${fab||'—'}`,
+`- Type de panne : ${state.type_panne}`,
+`- Description : ${v('description')||'—'}`,
+`- Sous garantie : ${state.garantie}${v('typeGarantie')? ' ('+v('typeGarantie')+')':''}`,
+``,
+`QUALIFICATION SAV`,
+`- Urgence : ${state.urgence}`,
+`- Intervention sur site : ${state.intervention}`,
+`- Devis nécessaire : ${state.devis}`,
+`- Technicien/équipe assignée : ${tech||'Non assigné'}`,
+`- Date souhaitée : ${v('dateSouhaitee')||'—'}`,
+`- Documents demandés : ${(state.docs||[]).join(', ')||'—'}`,
+`- Observations : ${v('observations')||'—'}`,
+  ].filter(l=>l!=='').join('\n');
+  document.getElementById('summary').textContent = lines;
+}
+
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const text = document.getElementById('summary').textContent;
+  navigator.clipboard.writeText(text).then(()=> showToast('Résumé copié ✓'))
+    .catch(()=>{
+      const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Résumé copié ✓');
+    });
+});
+document.getElementById('mailBtn').addEventListener('click',()=>{
+  const text = document.getElementById('summary').textContent;
+  const subject = encodeURIComponent('Ticket SAV - '+ (v('nom')||'Nouveau client'));
+  const body = encodeURIComponent(text);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+});
+const WEBHOOK_URL = 'https://hook.eu2.make.com/4l5mbjvsw0um61t5dv3e4cgyk7ras6rr';
+
+function buildPayload(){
+  const fab = v('fabricant')==='Autre (préciser)' ? v('fabricantAutre') : v('fabricant');
+  const tech = v('technicien')==='Autre (à spécifier)' ? v('technicienAutre') : v('technicien');
+  return {
+    date_ticket: new Date().toISOString(),
+    urgence_badge: urgenceBadge().replace(/[\[\]]/g,''),
+    client_type: state.client_type,
+    ref_client_existant: state.client_type==='Client existant' ? v('existingClientSearch') : '',
+    civilite: state.civilite,
+    nom: v('nom'),
+    prenom: v('prenom'),
+    telephone: v('tel'),
+    email: v('email'),
+    adresse_installation: v('adresse'),
+    num_commande: v('numCommande'),
+    date_installation: v('dateInstall'),
+    type_installation: state.type_install,
+    fabricant: fab,
+    type_panne: state.type_panne,
+    description: v('description'),
+    sous_garantie: state.garantie,
+    type_garantie: v('typeGarantie'),
+    urgence: state.urgence,
+    intervention: state.intervention,
+    devis: state.devis,
+    technicien: tech,
+    date_souhaitee: v('dateSouhaitee'),
+    documents_demandes: (state.docs||[]).join(', '),
+    observations: v('observations'),
+    resume: document.getElementById('summary').textContent
+  };
+}
+
+const webhookBtn = document.getElementById('webhookBtn');
+webhookBtn.addEventListener('click', async ()=>{
+  buildSummary();
+  const required = {nom:'Nom', prenom:'Prénom', tel:'Téléphone', adresse:"Adresse de l'installation", description:'Description du problème'};
+  const missing = Object.keys(required).filter(id=>!v(id)).map(id=>required[id]);
+  if(missing.length){ showToast('Champs manquants : '+missing.join(', ')); return; }
+
+  const label = webhookBtn.textContent;
+  webhookBtn.disabled = true;
+  webhookBtn.textContent = '⏳ Envoi en cours…';
+  try{
+    // Encodage formulaire = requête "simple" (pas de pré-vol CORS) ; Make lit chaque champ séparément
+    const res = await fetch(WEBHOOK_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body:new URLSearchParams(buildPayload())
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    webhookBtn.textContent = '✅ Ticket envoyé';
+    showToast('Ticket SAV envoyé à Make ✓');
+  }catch(err){
+    webhookBtn.disabled = false;
+    webhookBtn.textContent = label;
+    showToast("Échec de l'envoi ("+err.message+"). Réessayez ou utilisez l'email.");
+  }
+});
+
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+showPhase(0);
+</script>
+
+
+</body></html>
