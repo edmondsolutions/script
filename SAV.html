@@ -127,10 +127,25 @@ footer{text-align:center; color:var(--muted); font-size:.7rem; margin:20px 0 40p
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" id="existingClientBlock">
         <label>N° de l'affaire Pipedrive *</label>
         <input type="text" id="numAffaire" placeholder="Ex: 1234">
         <div class="hint">Le numéro du deal dans Pipedrive : les coordonnées du client sont récupérées depuis l'affaire.</div>
+      </div>
+
+      <div id="newClientBlock" style="display:none">
+        <div class="grid2">
+          <div class="field"><label>Prénom *</label><input type="text" id="prenom"></div>
+          <div class="field"><label>Nom de famille *</label><input type="text" id="nom"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Téléphone *</label><input type="tel" id="tel" placeholder="06 12 34 56 78"></div>
+          <div class="field"><label>Email</label><input type="email" id="email"></div>
+        </div>
+        <div class="field">
+          <label>Commentaire</label>
+          <textarea id="commentaire" placeholder="Comment le client nous a connus, contexte de l'appel..."></textarea>
+        </div>
       </div>
 
       <div class="field">
@@ -321,7 +336,6 @@ QUALIFICATION SAV
       </div>
       <div class="row-btns" style="margin-top:10px">
         <button class="btn-secondary" id="copyBtn">📋 Copier le résumé</button>
-        <button class="btn-secondary" id="mailBtn">✉️ Envoyer par email</button>
       </div>
       <div class="banner" style="margin-top:14px">ℹ️ L'envoi transmet toutes les réponses au webhook Make (champs séparés + résumé complet). Le scénario Make se charge ensuite de créer le deal SAV dans Pipedrive.</div>
     </div>
@@ -329,7 +343,7 @@ QUALIFICATION SAV
 
   <div class="row-btns">
     <button class="btn-secondary" id="prevBtn" style="display: inline-block;">← Précédent</button>
-    <button class="btn-primary" id="nextBtn">✅ Générer le résumé</button>
+    <button class="btn-primary" id="nextBtn">Suivant →</button>
   </div>
 
   <footer>Édmond Solutions — Formulaire de qualification SAV interne</footer>
@@ -368,6 +382,11 @@ document.querySelectorAll('.choices').forEach(group=>{
 });
 
 function onStateChange(name){
+  if(name === 'client_type'){
+    const nouveau = state.client_type === 'Nouveau contact';
+    document.getElementById('existingClientBlock').style.display = nouveau ? 'none' : 'block';
+    document.getElementById('newClientBlock').style.display = nouveau ? 'block' : 'none';
+  }
   if(name === 'urgence'){
     document.getElementById('securiteBanner').style.display =
       state.urgence.startsWith('Critique') ? 'block' : 'none';
@@ -385,7 +404,7 @@ function showPhase(p){
   document.querySelectorAll('.phase').forEach(s=> s.style.display = (+s.dataset.phase===p) ? 'block':'none');
   document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', +t.dataset.phase===p));
   document.getElementById('prevBtn').style.display = p===0 ? 'none':'inline-block';
-  document.getElementById('nextBtn').textContent = p===totalPhases-1 ? '✅ Générer le résumé' : 'Suivant →';
+  document.getElementById('nextBtn').style.display = p===totalPhases-1 ? 'none' : 'inline-block';
   document.getElementById('progressBar').style.width = (((p+1)/totalPhases)*100)+'%';
   if(p===totalPhases-1) buildSummary();
 }
@@ -413,7 +432,15 @@ function buildSummary(){
 ``,
 `CLIENT`,
 `- Statut : ${state.client_type}`,
+...(state.client_type==='Nouveau contact' ? [
+`- Prénom : ${v('prenom')||'—'}`,
+`- Nom : ${v('nom')||'—'}`,
+`- Téléphone : ${v('tel')||'—'}`,
+`- Email : ${v('email')||'—'}`,
+`- Commentaire : ${v('commentaire')||'—'}`,
+] : [
 `- N° affaire Pipedrive : ${v('numAffaire')||'—'}`,
+]),
 `- Date installation initiale : ${v('dateInstall')||'—'}`,
 ``,
 `PRODUIT / PANNE`,
@@ -444,12 +471,6 @@ document.getElementById('copyBtn').addEventListener('click',()=>{
       showToast('Résumé copié ✓');
     });
 });
-document.getElementById('mailBtn').addEventListener('click',()=>{
-  const text = document.getElementById('summary').textContent;
-  const subject = encodeURIComponent('Ticket SAV - '+ (v('numAffaire') ? 'Affaire '+v('numAffaire') : 'Nouveau client'));
-  const body = encodeURIComponent(text);
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
-});
 const WEBHOOK_URL = 'https://hook.eu2.make.com/4l5mbjvsw0um61t5dv3e4cgyk7ras6rr';
 
 function buildPayload(){
@@ -459,7 +480,12 @@ function buildPayload(){
     date_ticket: new Date().toISOString(),
     urgence_badge: urgenceBadge().replace(/[\[\]]/g,''),
     client_type: state.client_type,
-    num_affaire_pipedrive: v('numAffaire'),
+    num_affaire_pipedrive: state.client_type==='Client existant' ? v('numAffaire') : '',
+    prenom: state.client_type==='Nouveau contact' ? v('prenom') : '',
+    nom: state.client_type==='Nouveau contact' ? v('nom') : '',
+    telephone: state.client_type==='Nouveau contact' ? v('tel') : '',
+    email: state.client_type==='Nouveau contact' ? v('email') : '',
+    commentaire: state.client_type==='Nouveau contact' ? v('commentaire') : '',
     date_installation: v('dateInstall'),
     type_installation: state.type_install,
     fabricant: fab,
@@ -481,7 +507,9 @@ function buildPayload(){
 const webhookBtn = document.getElementById('webhookBtn');
 webhookBtn.addEventListener('click', async ()=>{
   buildSummary();
-  const required = {numAffaire:'N° affaire Pipedrive', description:'Description du problème'};
+  const required = state.client_type==='Nouveau contact'
+    ? {prenom:'Prénom', nom:'Nom de famille', tel:'Téléphone', description:'Description du problème'}
+    : {numAffaire:'N° affaire Pipedrive', description:'Description du problème'};
   const missing = Object.keys(required).filter(id=>!v(id)).map(id=>required[id]);
   if(missing.length){ showToast('Champs manquants : '+missing.join(', ')); return; }
 
@@ -501,7 +529,7 @@ webhookBtn.addEventListener('click', async ()=>{
   }catch(err){
     webhookBtn.disabled = false;
     webhookBtn.textContent = label;
-    showToast("Échec de l'envoi ("+err.message+"). Réessayez ou utilisez l'email.");
+    showToast("Échec de l'envoi ("+err.message+"). Réessayez ou copiez le résumé.");
   }
 });
 
